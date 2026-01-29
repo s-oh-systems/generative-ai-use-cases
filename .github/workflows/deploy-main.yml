@@ -1,0 +1,36 @@
+name: Deploy Main to AWS
+
+on:
+  push:
+    branches:
+      - main
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          aws-region: us-east-1
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: CDK Bootstrap and Deploy
+        run: |
+          npx -w packages/cdk cdk bootstrap
+          npx -w packages/cdk cdk deploy --all --require-approval never
